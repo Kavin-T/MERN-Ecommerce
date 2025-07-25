@@ -24,7 +24,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
       default: false
-    }
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0
+    },
+    lastFailedLogin: {
+      type: Date
+    },
+
   },
   { timestamps: true } // Adds createdAt and updatedAt timestamps
 );

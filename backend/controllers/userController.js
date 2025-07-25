@@ -10,24 +10,46 @@ import transporter from '../config/email.js';
 const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
 
     if (!user) {
-      res.statusCode = 404;
-      throw new Error(
-        'Invalid email address. Please check your email and try again.'
-      );
+      res.status(404);
+      throw new Error('Invalid email address. Please check your email and try again.');
+    }
+
+    // Check for lockout
+    if (user.failedLoginAttempts >= 3) {
+      const timeSinceLastAttempt = Date.now() - new Date(user.lastFailedLogin).getTime();
+      const lockoutTime = 30 * 1000; // 30 seconds in milliseconds
+
+      if (timeSinceLastAttempt < lockoutTime) {
+        const waitTime = Math.ceil((lockoutTime - timeSinceLastAttempt) / 1000);
+        return res.status(429).json({
+          message: `Account temporarily locked due to multiple failed login attempts. Please try again after ${waitTime} seconds.`
+        });
+      } else {
+        // Reset counter after timeout
+        user.failedLoginAttempts = 0;
+        await user.save();
+      }
     }
 
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
-      res.statusCode = 401;
-      throw new Error(
-        'Invalid password. Please check your password and try again.'
-      );
+      user.failedLoginAttempts += 1;
+      user.lastFailedLogin = new Date();
+      await user.save();
+
+      return res.status(401).json({
+        message: 'Invalid password. Please check your password and try again.'
+      });
     }
+
+    // Successful login, reset failed attempts
+    user.failedLoginAttempts = 0;
+    user.lastFailedLogin = undefined;
+    await user.save();
 
     generateToken(req, res, user._id);
 
@@ -43,6 +65,7 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+
 // @desc     Register user
 // @method   POST
 // @endpoint /api/users
@@ -50,6 +73,26 @@ const loginUser = async (req, res, next) => {
 const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
+
+    // Validation regex patterns
+    const usernameRegex = /^[a-zA-Z0-9]{3,}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+    // Validate name
+    if (!usernameRegex.test(name)) {
+      return res.status(400).json({
+        message:
+          'Username must be at least 3 characters long and contain only letters and numbers.'
+      });
+    }
+
+    // Validate password
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.'
+      });
+    }
 
     const userExists = await User.findOne({ email });
 
