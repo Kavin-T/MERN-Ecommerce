@@ -16,10 +16,43 @@ def setup_driver():
     driver.get("http://localhost:3000/login")  # Update this URL if hosted elsewhere
     return driver
 
+def clear_login_fields(driver):
+    email_field = driver.find_element(By.ID, "email")
+    password_field = driver.find_element(By.ID, "password")
+
+    email_field.send_keys(Keys.CONTROL + "a")
+    email_field.send_keys(Keys.DELETE)
+
+    password_field.send_keys(Keys.CONTROL + "a")
+    password_field.send_keys(Keys.DELETE)
+
+    time.sleep(1)  # optional delay
+
 # ---------- Test Cases ----------
+def test_invalid_login(driver):
+    driver.find_element(By.ID, "email").send_keys("admin@admin.com")
+    driver.find_element(By.ID, "password").send_keys("wrongpassword")
+    driver.find_element(By.ID, "login-button").click()
+    time.sleep(5)
+    assert "Invalid password" in driver.page_source
+
+def test_account_locked(driver):
+    clear_login_fields(driver)
+    driver.find_element(By.ID, "email").send_keys("admin@admin.com")
+    driver.find_element(By.ID, "password").send_keys("wrongpassword")
+    driver.find_element(By.ID, "login-button").click()
+    time.sleep(5)
+    driver.find_element(By.ID, "login-button").click()
+    time.sleep(5)
+    driver.find_element(By.ID, "login-button").click()
+    time.sleep(5)
+    assert "Account temporarily locked due to multiple failed login attempts." in driver.page_source
+
 def test_login(driver):
+    clear_login_fields(driver)
     driver.find_element(By.ID, "email").send_keys("admin@admin.com")
     driver.find_element(By.ID, "password").send_keys("admin123")
+    time.sleep(20)
     driver.find_element(By.ID, "login-button").click()
 
     WebDriverWait(driver, 20).until(
@@ -46,6 +79,8 @@ def test_add_to_cart(driver):
 if __name__ == "__main__":
     driver = setup_driver()
     try:
+        test_invalid_login(driver)
+        test_account_locked(driver)
         test_login(driver)
         test_search_product(driver)
         test_add_to_cart(driver)

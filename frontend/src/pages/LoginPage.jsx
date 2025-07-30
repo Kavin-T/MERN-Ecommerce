@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col, InputGroup } from 'react-bootstrap';
+import { Form, Button, Row, Col, InputGroup, Alert } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLoginMutation } from '../slices/usersApiSlice';
 import { setCredentials } from '../slices/authSlice';
-import { toast } from 'react-toastify';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import FormContainer from '../components/FormContainer';
 import Loader from '../components/Loader';
@@ -15,6 +14,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); // NEW
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -39,19 +39,28 @@ const LoginPage = () => {
 
   const submitHandler = async e => {
     e.preventDefault();
+    setErrorMessage(''); // Clear previous errors
     try {
       const res = await login({ email, password, remember }).unwrap();
       dispatch(setCredentials({ ...res }));
       navigate(redirect);
-      toast.success('Login successful');
     } catch (error) {
-      toast.error(error?.data?.message || error.error);
+      setErrorMessage(error?.data?.message || error.error || 'Login failed');
     }
   };
+
   return (
     <FormContainer>
       <Meta title={'Sign In'} />
       <h1>Sign In</h1>
+
+      {/* Show error message if present */}
+      {errorMessage && (
+        <Alert variant='danger'>
+          {errorMessage}
+        </Alert>
+      )}
+
       <Form onSubmit={submitHandler}>
         <Form.Group className='mb-3' controlId='email'>
           <Form.Label>Email address</Form.Label>
@@ -104,7 +113,7 @@ const LoginPage = () => {
           disabled={isLoading}
           id='login-button'
         >
-          Sign In
+          {isLoading ? <Loader size="sm" /> : 'Sign In'}
         </Button>
       </Form>
       <Row>
