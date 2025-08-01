@@ -52,7 +52,7 @@ def test_login(driver):
     clear_login_fields(driver)
     driver.find_element(By.ID, "email").send_keys("admin@admin.com")
     driver.find_element(By.ID, "password").send_keys("admin123")
-    time.sleep(20)
+    time.sleep(25)
     driver.find_element(By.ID, "login-button").click()
 
     WebDriverWait(driver, 20).until(

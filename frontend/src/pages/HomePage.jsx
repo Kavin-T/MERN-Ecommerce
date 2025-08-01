@@ -51,7 +51,6 @@ const HomePage = () => {
         </Message>
       ) : (
         <>
-          {!search && <ProductCarousel />}
           <Meta />
           <h1>Latest Products</h1>
           <Row>

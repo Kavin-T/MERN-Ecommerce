@@ -8,6 +8,7 @@ import { useLogoutMutation } from '../slices/usersApiSlice';
 import { logout } from '../slices/authSlice';
 import { toast } from 'react-toastify';
 import SearchBox from './SearchBox';
+import logo from '../assets/logo.png';
 
 const Header = () => {
   const { cartItems } = useSelector(state => state.cart);
@@ -40,6 +41,7 @@ const Header = () => {
         <LinkContainer to='/'>
           <Navbar.Brand>MERN Shop</Navbar.Brand>
         </LinkContainer>
+        <img src={logo} alt="" />
         <Navbar.Toggle aria-controls='basic-navbar-nav' />
         <Navbar.Collapse id='basic-navbar-nav'>
           <Nav className='ms-auto m-2'>

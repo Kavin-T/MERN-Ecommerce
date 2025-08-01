@@ -57,9 +57,9 @@ const RegisterPage = () => {
       console.log("Sending register request...");
       const res = await register({ name, email, password }).unwrap();
       console.log("Register success:", res);
-      dispatch(setCredentials({ ...res }));
-      navigate(redirect);
-      toast.success("Registration successful. Welcome!");
+      // dispatch(setCredentials({ ...res }));
+      // navigate(redirect);
+      setErrorMessage("Registration successful. Welcome!");
     } catch (error) {
       console.error("Registration failed:", error);
       setErrorMessage(
@@ -81,6 +81,7 @@ const RegisterPage = () => {
             value={name}
             type="text"
             placeholder="Enter name"
+            id="name"
             onChange={(e) => setName(e.target.value)}
           />
         </Form.Group>
@@ -90,6 +91,7 @@ const RegisterPage = () => {
             value={email}
             type="email"
             placeholder="Enter email"
+            id="email"
             onChange={(e) => setEmail(e.target.value)}
           />
         </Form.Group>
@@ -101,6 +103,7 @@ const RegisterPage = () => {
               value={password}
               placeholder="Enter password"
               onChange={(e) => setPassword(e.target.value)}
+              id="password"
             />
             <InputGroup.Text
               onClick={togglePasswordVisibility}
@@ -118,6 +121,7 @@ const RegisterPage = () => {
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               placeholder="Confirm password"
+              id="confirm-password"
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
             <InputGroup.Text
@@ -133,6 +137,7 @@ const RegisterPage = () => {
           className="mb-3 w-100"
           variant="warning"
           type="submit"
+          id="register-button"
           disabled={isLoading}
         >
           Register
