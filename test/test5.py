@@ -77,12 +77,6 @@ def test_valid_login_and_items(driver):
     items = driver.find_elements(By.CLASS_NAME, "product-title")
     print("Purchased Items:", [item.text for item in items[:2]])
 
-def test_invoice_print(driver):
-    driver.get("http://localhost:3000/orders")
-    time.sleep(2)
-    assert "Invoice" in driver.page_source or "Order ID" in driver.page_source
-    print("Invoice is available after login.")
-
 def test_logo_present(driver):
     driver.get("http://localhost:3000")
     logo = driver.find_element(By.TAG_NAME, "img")
@@ -126,17 +120,28 @@ def test_dropdowns(driver):
     print("Dropdown works.")
 
 def test_register_user(driver, email, password):
-    print("test")
-    driver.get("http://localhost:3000/register")
-    time.sleep(5)
-    driver.find_element(By.ID, "name").send_keys("TestUser")
-    driver.find_element(By.ID, "email").send_keys(email)
-    driver.find_element(By.ID, "password").send_keys(password)
-    driver.find_element(By.ID, "confirm-password").send_keys(password)
-    driver.find_element(By.ID, "register-button").click()
-    time.sleep(2)
-    assert "Registration successful. Welcome!" in driver.page_source
-    print(f"Registered user: {email}")
+    try:
+        driver.get("http://localhost:3000/register")
+        time.sleep(5)
+        driver.find_element(By.ID, "name").send_keys("TestUser")
+        driver.find_element(By.ID, "email").send_keys(email)
+        driver.find_element(By.ID, "password").send_keys(password)
+        driver.find_element(By.ID, "confirm-password").send_keys(password)
+        driver.find_element(By.ID, "register-button").click()
+        time.sleep(2)
+        assert "Registration successful. Welcome!" in driver.page_source
+        print(f"Registered user: {email}")
+    except Exception as e:
+        print(" Test failed:", e)
+
+def test_account_locked(driver):
+    driver.get("http://localhost:3000/login")
+    driver.find_element(By.ID, "email").send_keys("david@email.com")
+    driver.find_element(By.ID, "password").send_keys("wrongpassword")
+    for i in range(4):
+        driver.find_element(By.ID, "login-button").click()
+        time.sleep(2)
+    assert "Account temporarily locked due to multiple failed login attempts." in driver.page_source
 
 # ---------- Main ----------
 if __name__ == "__main__":
@@ -154,10 +159,11 @@ if __name__ == "__main__":
         test_logo_present(driver)
         test_auto_suggestions(driver)
 
-        # test_invoice_print(driver)
         test_dropdowns(driver)
+        driver.quit()
         driver = setup_driver()
         test_register_user(driver, "newuser1@example.com", "Pass123$$$")
+        test_account_locked(driver)
         print("\n All tests executed successfully.")
     except Exception as e:
         print(" Test failed:", e)

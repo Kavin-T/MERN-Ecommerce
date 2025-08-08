@@ -1,51 +1,41 @@
 import crypto from 'crypto';
-import Razorpay from 'razorpay';
 
+// Simulated config endpoint
 const config = (req, res) =>
   res.send({
-    razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-    razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET
+    razorpayKeyId: 'FAKE_KEY_ID',
+    razorpayKeySecret: 'FAKE_KEY_SECRET'
   });
 
+// Simulated order creation (always successful)
 const order = async (req, res, next) => {
   try {
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET
-    });
-
     const options = req.body;
 
-    const order = await razorpay.orders.create(options);
+    // Simulated order data (like Razorpay returns)
+    const fakeOrder = {
+      id: 'order_' + crypto.randomBytes(8).toString('hex'),
+      amount: options.amount || 1000,
+      currency: options.currency || 'INR',
+      receipt: options.receipt || 'rcpt_' + Date.now(),
+      status: 'created'
+    };
 
-    if (!order) {
-      res.statusCode = 500;
-      throw new Error('No order');
-    }
-    res.status(201).json(order);
+    res.status(201).json(fakeOrder);
   } catch (error) {
     next(error);
   }
 };
 
+// Simulated validation (always successful)
 const validate = (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-    req.body;
+  const { razorpay_order_id, razorpay_payment_id } = req.body;
 
-  const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest('hex');
-  // console.log(generatedSignature, razorpay_signature);
-
-  if (generatedSignature !== razorpay_signature) {
-    res.statusCode = 400;
-    throw new Error('payment is not legit!');
-  }
+  // No real signature check — just pretend it's valid
   res.status(201).json({
-    id: razorpay_payment_id,
+    id: razorpay_payment_id || 'pay_' + crypto.randomBytes(8).toString('hex'),
     status: 'success',
-    message: 'payment is successful',
+    message: 'Payment is successful (simulated)',
     updateTime: new Date().toLocaleTimeString()
   });
 };
